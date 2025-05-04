@@ -106,4 +106,38 @@ class SiteController extends Controller
 		Yii::app()->user->logout();
 		$this->redirect(Yii::app()->homeUrl);
 	}
+
+	public function actionLoadProvinces()
+	{
+		$region_id = $_POST['User']['region_id'];
+		$data = Province::model()->findAll('region_id=:rid', array(':rid' => $region_id));
+		$data = CHtml::listData($data, 'province_id', 'province_name');
+
+		foreach ($data as $value => $name) {
+			echo CHtml::tag('option', array('value' => $value), CHtml::encode($name), true);
+		}
+	}
+
+	public function actionLoadCities()
+	{
+		$province_id = $_POST['User']['province_id'];
+		$data = City::model()->findAll('province_id=:pid', array(':pid' => $province_id));
+		$data = CHtml::listData($data, 'city_id', 'city_name');
+
+		foreach ($data as $value => $name) {
+			echo CHtml::tag('option', array('value' => $value), CHtml::encode($name), true);
+		}
+	}
+
+	public function actionLoadBarangays()
+	{
+		$city_id = $_POST['User']['city_id'];
+		$data = Barangay::model()->findAll('city_id=:cid', array(':cid' => $city_id));
+		$data = CHtml::listData($data, 'barangay_id', 'barangay_name');
+
+		foreach ($data as $value => $name) {
+			echo CHtml::tag('option', array('value' => $value), CHtml::encode($name), true);
+		}
+	}
+
 }
