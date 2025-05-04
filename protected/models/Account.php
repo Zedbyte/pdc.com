@@ -39,16 +39,41 @@ class Account extends CActiveRecord
 		// NOTE: you should only define rules for those attributes that
 		// will receive user inputs.
 		return array(
-			array('username, password, salt, account_type, department_id, position_id, date_created, date_updated', 'required'),
+			array('username, password, account_type, department_id, position_id', 'required'),
 			array('account_type, department_id, position_id, status', 'numerical', 'integerOnly'=>true),
 			array('username, email_address', 'length', 'max'=>128),
 			array('password, salt', 'length', 'max'=>255),
 			// The following rule is used by search().
 			// @todo Please remove those attributes that should not be searched.
 			array('id, username, password, email_address, salt, account_type, department_id, position_id, status, date_created, date_updated', 'safe', 'on'=>'search'),
+
+			array('email_address', 'email', 'message'=>'Invalid email address.'),
+			array('username', 'unique', 'message'=>'This username has already been taken.'),
+			array('password', 'length', 'min'=>6, 'max'=>20, 
+			'tooShort'=>'Password should be at least 6 characters long.', 
+			'tooLong'=>'Password should not exceed 20 characters.'),
+
+			array('date_created, date_updated', 'safe'),
 		);
 	}
 
+	protected function beforeSave() {
+		if (parent::beforeSave()) {
+			if ($this->isNewRecord) {
+
+				$this->salt = time();
+				$this->password = hash('sha256', $this->salt . $this->password);
+
+				$this->date_created = date('Y-m-d H:i:s');
+				$this->date_updated = date('Y-m-d H:i:s');
+			} else {
+				$this->date_updated = date('Y-m-d H:i:s');
+			}
+			return true;
+		}
+	}
+	
+	
 	/**
 	 * @return array relational rules.
 	 */
