@@ -28,11 +28,11 @@ class AccountController extends Controller
 	{
 		return array(
 			array('allow',  // allow all users to perform 'index' and 'view' actions
-				'actions'=>array('index','view'),
+				'actions'=>array('index','view', 'create'),
 				'users'=>array('*'),
 			),
 			array('allow', // allow authenticated user to perform 'create' and 'update' actions
-				'actions'=>array('create','update'),
+				'actions'=>array('update'),
 				'users'=>array('@'),
 			),
 			array('allow', // allow admin user to perform 'admin' and 'delete' actions
@@ -62,20 +62,45 @@ class AccountController extends Controller
 	 */
 	public function actionCreate()
 	{
-		$model=new Account;
+		$account = new Account;
+		$user = new User;
+		$barangay = CHtml::listData(Barangay::model()->findAll(), 'barangay_id', 'barangay_name');
+		$city = CHtml::listData(City::model()->findAll(), 'city_id', 'city_name');
+		$province = CHtml::listData(Province::model()->findAll(), 'province_id', 'province_name');
+		$region = CHTml::listData(Region::model()->findAll(), 'region_id', 'region_name');
+
+		$department = CHtml::listData(Department::model()->findAll(), 'id', 'department_name');
+		$position = CHtml::listData(Position::model()->findAll(), 'id', 'position_name');
 
 		// Uncomment the following line if AJAX validation is needed
 		// $this->performAjaxValidation($model);
 
 		if(isset($_POST['Account']))
 		{
-			$model->attributes=$_POST['Account'];
-			if($model->save())
-				$this->redirect(array('view','id'=>$model->id));
+			$account->attributes=$_POST['Account'];
+			$account->account_type = 1;
+			$user->attributes=$_POST['User'];
+			// var_dump($account->attributes);exit;
+			if($account->save())
+			{	
+				$user->account_id = $account->id;
+				$user->save();
+				$this->redirect(array('view','id'=>$account->id));
+			}
+			else {
+				var_dump($account->getErrors());
+			}
 		}
 
 		$this->render('create',array(
-			'model'=>$model,
+			'account'=>$account,
+			'user'=>$user,
+			'barangay'=>$barangay,
+			'city'=>$city,
+			'province'=>$province,
+			'region'=>$region,
+			'department'=>$department,
+			'position'=>$position,
 		));
 	}
 
@@ -86,22 +111,38 @@ class AccountController extends Controller
 	 */
 	public function actionUpdate($id)
 	{
-		$model=$this->loadModel($id);
-
-		// Uncomment the following line if AJAX validation is needed
-		// $this->performAjaxValidation($model);
-
-		if(isset($_POST['Account']))
-		{
-			$model->attributes=$_POST['Account'];
-			if($model->save())
-				$this->redirect(array('view','id'=>$model->id));
+		$account = $this->loadModel($id); // Fixed
+		$user = User::model()->findByAttributes(array('account_id' => $id));
+	
+		// Load dropdowns (reuse same as in create)
+		$barangay = CHtml::listData(Barangay::model()->findAll(), 'barangay_id', 'barangay_name');
+		$city = CHtml::listData(City::model()->findAll(), 'city_id', 'city_name');
+		$province = CHtml::listData(Province::model()->findAll(), 'province_id', 'province_name');
+		$region = CHtml::listData(Region::model()->findAll(), 'region_id', 'region_name');
+		$department = CHtml::listData(Department::model()->findAll(), 'id', 'department_name');
+		$position = CHtml::listData(Position::model()->findAll(), 'id', 'position_name');
+	
+		if (isset($_POST['Account']) && isset($_POST['User'])) {
+			$account->attributes = $_POST['Account'];
+			$user->attributes = $_POST['User'];
+	
+			if ($account->save() && $user->save()) {
+				$this->redirect(array('view', 'id' => $account->id));
+			}
 		}
-
-		$this->render('update',array(
-			'model'=>$model,
+	
+		$this->render('update', array(
+			'account' => $account,
+			'user' => $user,
+			'barangay' => $barangay,
+			'city' => $city,
+			'province' => $province,
+			'region' => $region,
+			'department' => $department,
+			'position' => $position,
 		));
 	}
+	
 
 	/**
 	 * Deletes a particular model.
